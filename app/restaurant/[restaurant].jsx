@@ -6,12 +6,16 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   Platform,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DatePicker from "../../components/restaurant/DatePicker";
+import FindSlots from "../../components/restaurant/FindSlots";
+import GuestPickerComponent from "../../components/restaurant/GuestPicker";
 import { db } from "../../config/firebaseConfig";
 
 const Restaurant = () => {
@@ -21,7 +25,11 @@ const Restaurant = () => {
   const [restaurantData, setRestaurantsData] = useState({});
   const [carouselData, setCarouselData] = useState({});
   const [slotData, setSlotData] = useState({});
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedNumber, setSelectedNumber] = useState(2);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [date, setDate] = useState(new Date());
+
   const handleNextImage = () => {
     const carouselLength = carouselData[0]?.images?.length;
     if (currentIndex < carouselLength - 1) {
@@ -85,7 +93,12 @@ const Restaurant = () => {
             bottom: 15,
           }}
         >
-          <View className="bg-white h-10 w-10 mx-1 rounded-full"></View>
+          {carouselData[0]?.images?.map((_, i) => (
+            <View
+              key={i}
+              className={`bg-white h-2 w-2 mx-1 rounded-full ${i === currentIndex && "h-3 w-3"}`}
+            ></View>
+          ))}
         </View>
         <Image
           resizeMethod="cover"
@@ -164,12 +177,20 @@ const Restaurant = () => {
       if (!slotsSnapshot.empty) {
         slotsSnapshot.forEach((slot) => slots.push(slot.data()));
       }
-      setSlotData(slots);
+      setSlotData(slots[0]?.slot);
     } catch (e) {
       console.log("Error fetchingData", e);
     }
   };
-
+  const handleLocation = async () => {
+    const url = "https://maps.app.goo.gl/R48YLBFFqa67Avua8";
+    const supported = await Linking.openURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      console.log("how can we open url", url);
+    }
+  };
   useEffect(() => {
     getRestaurantsData();
   }, []);
@@ -195,6 +216,64 @@ const Restaurant = () => {
             horizontal
             scrollEnabled={false}
             style={{ borderRadius: 25 }}
+          />
+        </View>
+        <View className="flex-1 flex-row mt-2 p-2">
+          <Ionicons
+            name="location-sharp"
+            size={24}
+            color={"#f49b33"}
+            // onPress={handleNextImage}
+          >
+            <Text className="max-w-[75%] text-white text-lg">
+              {restaurantData?.address} | {""}
+              <Text
+                onPress={handleLocation}
+                className="underline flex items-center text-md cursor-pointer  font-bold mt-1 text-[#f49b33]"
+              >
+                Get Direction
+              </Text>
+            </Text>
+          </Ionicons>
+        </View>
+        <View className="flex-1 flex-row mt-2 p-2 mx-2">
+          <Ionicons
+            name="time"
+            size={20}
+            color={"#f49b33"}
+            // onPress={handleNextImage}
+          >
+            <Text className="max-w-[75%] mx-3 text-white text-lg font-bold">
+              {restaurantData?.opening} - {restaurantData?.closing}
+            </Text>
+          </Ionicons>
+        </View>
+        <View className="flex-1 border m-2 p-2 border-[#f49b33] rounded-lg">
+          <View className="flex-1 flex-row m-2 p-2 justify-between items-center">
+            <View className="flex-1 flex-row">
+              <Ionicons name="calendar" size={20} color={"#f49b33"} />
+              <Text className="text-white mx-2">Select Booking Date</Text>
+            </View>
+            <DatePicker date={date} setDate={setDate} />
+          </View>
+          <View className="flex-1 flex-row m-2 p-2 justify-between items-center bg-[#474747] rounded-lg">
+            <View className="flex-1 flex-row">
+              <Ionicons name="calendar" size={20} color={"#f49b33"} />
+              <Text className="text-white mx-2">Select number of guests</Text>
+            </View>
+            <GuestPickerComponent
+              selectedNumber={selectedNumber}
+              setSelectedNumber={setSelectedNumber}
+            />
+          </View>
+        </View>
+        <View className="flex-1">
+          <FindSlots
+            date={date}
+            selectedNumber={selectedNumber}
+            slots={slotData}
+            selectedSlot={selectedSlot}
+            setSelectedSlot={setSelectedSlot}
           />
         </View>
       </ScrollView>
