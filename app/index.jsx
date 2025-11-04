@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import {
   Image,
@@ -12,6 +13,11 @@ import emptyImage from "../assets/images/Frame.png";
 import logo from "././../assets/images/dinetimelogo.png";
 export default function Index() {
   const router = useRouter();
+
+  const handleGuest = async () => {
+    await AsyncStorage.setItem("isGuest", "true");
+    router.push("/home");
+  };
   return (
     <SafeAreaView className={`bg-[#2b2b2b]`}>
       <ScrollView contentContainerStyle={{ height: "100%" }}>
@@ -45,7 +51,7 @@ export default function Index() {
             </Text>
             <TouchableOpacity
               className="flex flex-row items-center gap-1 justify-center"
-              onPress={() => router.push("/signin")}
+              onPress={handleGuest}
             >
               <Text className="text-white font-bold">Already a User ?</Text>
               <Text className="text-base font-bold text-[#f49b33] underline">

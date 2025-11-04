@@ -1,6 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -13,10 +12,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../../config/firebaseConfig";
+
 import DatePicker from "../../components/restaurant/DatePicker";
 import FindSlots from "../../components/restaurant/FindSlots";
 import GuestPickerComponent from "../../components/restaurant/GuestPicker";
-import { db } from "../../config/firebaseConfig";
 
 const Restaurant = () => {
   const flatListRef = useRef(null);
@@ -29,6 +31,7 @@ const Restaurant = () => {
   const [selectedNumber, setSelectedNumber] = useState(2);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [date, setDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
   const handleNextImage = () => {
     const carouselLength = carouselData[0]?.images?.length;
@@ -135,22 +138,24 @@ const Restaurant = () => {
   };
   const getRestaurantsData = async () => {
     try {
+      setCarouselData([]); // prevent undefined UI crash
+      setSlotData([]); // prevent undefined UI crash
+      setRestaurantsData(null);
+
       const restantQuery = query(
         collection(db, "restaurants"),
         where("name", "==", restaurant)
       );
       const restaurantSnapshot = await getDocs(restantQuery);
-
       if (restaurantSnapshot.empty) {
         console.log("no matching restaurant found");
         return;
       }
-      // ✅ Get restaurant document
       const restaurantDoc = restaurantSnapshot.docs[0];
       const restaurantData = restaurantDoc.data();
       setRestaurantsData(restaurantData);
 
-      // ✅ Use restaurantDoc.ref now
+      // fetch carousel
       const carouselQuery = query(
         collection(db, "carousel"),
         where("res_id", "==", restaurantDoc.ref)
@@ -166,6 +171,7 @@ const Restaurant = () => {
       }
       setCarouselData(carouselImages);
 
+      // fetch slots
       const slotsQuery = query(
         collection(db, "slots"),
         where("ref_id", "==", restaurantDoc.ref)
@@ -177,11 +183,13 @@ const Restaurant = () => {
       if (!slotsSnapshot.empty) {
         slotsSnapshot.forEach((slot) => slots.push(slot.data()));
       }
-      setSlotData(slots[0]?.slot);
+
+      setSlotData(slots?.[0]?.slot ?? []);
     } catch (e) {
       console.log("Error fetchingData", e);
     }
   };
+
   const handleLocation = async () => {
     const url = "https://maps.app.goo.gl/R48YLBFFqa67Avua8";
     const supported = await Linking.openURL(url);
@@ -192,8 +200,12 @@ const Restaurant = () => {
     }
   };
   useEffect(() => {
-    getRestaurantsData();
+    (async () => {
+      await getRestaurantsData();
+      setLoading(false);
+    })();
   }, []);
+
   //   console.log(restaurantData, carouselData, slotData);
   return (
     <SafeAreaView
@@ -211,7 +223,7 @@ const Restaurant = () => {
         <View className="h-64 max-w-[98%] mx-2 rounded-[25px]">
           <FlatList
             ref={flatListRef}
-            data={carouselData[0]?.images}
+            data={carouselData?.[0]?.images ?? []}
             renderItem={carouselItem}
             horizontal
             scrollEnabled={false}
@@ -274,6 +286,7 @@ const Restaurant = () => {
             slots={slotData}
             selectedSlot={selectedSlot}
             setSelectedSlot={setSelectedSlot}
+            restaurant={restaurant}
           />
         </View>
       </ScrollView>

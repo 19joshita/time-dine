@@ -17,10 +17,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "../../assets/images/dinetimelogo.png";
 import homebanner from "../../assets/images/homeBanner.png";
 // import uploadData from "../../config/bulkupload";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from "../../config/firebaseConfig";
 const Home = () => {
   const [restaurants, setRestaurants] = useState([]);
   const router = useRouter();
+  const temp = async () => {
+    const value = await AsyncStorage.getItem("userEmail");
+    console.log(value, "value");
+  };
   // console.log(restaurants);
   // for uploading data in the firebase
   // useEffect(() => {
@@ -53,6 +58,7 @@ const Home = () => {
   };
   useEffect(() => {
     getRestaurants();
+    temp();
   }, []);
   return (
     <SafeAreaView

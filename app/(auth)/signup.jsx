@@ -1,6 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { doc, getFirestore, setDoc } from "firebase/firestore";
 import { Formik } from "formik";
 import {
+  Alert,
   Image,
   ScrollView,
   Text,
@@ -13,9 +17,47 @@ import { StatusBar } from "react-native-web";
 import emptyImage from "../../assets/images/Frame.png";
 import logo from "../../assets/images/dinetimelogo.png";
 import { validationSchema } from "../../utils/authSchema";
+
 const SignUp = () => {
   const router = useRouter();
-  const handleSignUp = () => {};
+  const auth = getAuth();
+  const db = getFirestore();
+  const handleGuest = async () => {
+    await AsyncStorage.setItem("isGuest", "true");
+    router.push("/home");
+  };
+  const handleSignUp = async (values) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredential.user;
+      await setDoc(doc(db, "users", user.uid), {
+        email: values.email,
+        createdAt: new Date(),
+      });
+
+      await AsyncStorage.setItem("userEmail", values?.email);
+      router.push("/home");
+    } catch (error) {
+      // console.log("Error white signUp", e);
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert(
+          "Sign Up Failed",
+          "This email address is already exists.Please use different email.",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert(
+          "Sign Up Failed",
+          "This email address is already exists.Please use different email.",
+          [{ text: "OK" }]
+        );
+      }
+    }
+  };
   return (
     <SafeAreaView className={`bg-[#2b2b2b]`}>
       <ScrollView contentContainerStyle={{ height: "100%" }}>
@@ -45,7 +87,7 @@ const SignUp = () => {
                       Email
                     </Text>
                     <TextInput
-                      className="h-10 border border-white text-white rounded px-2 w-full"
+                      className="h-12 border border-white text-white rounded px-2 w-full"
                       keyboardType="email-address"
                       onChangeText={handleChange("email")}
                       value={values.email}
@@ -62,7 +104,7 @@ const SignUp = () => {
                       Password
                     </Text>
                     <TextInput
-                      className="h-10 border border-white text-white rounded px-2 w-full"
+                      className="h-12 border border-white text-white rounded px-2 w-full"
                       secureTextEntry
                       onChangeText={handleChange("password")}
                       value={values.password}
@@ -104,10 +146,10 @@ const SignUp = () => {
               </Text>
               <TouchableOpacity
                 className="flex flex-row items-center gap-1 justify-center"
-                onPress={() => router.push("/home")}
+                onPress={handleGuest}
               >
                 <Text className="text-white font-bold">Be a </Text>
-                <Text className="text-base font-bold text-[#f49b33] underline">
+                <Text className="text-base font-bold text-[#f49b33] underline" >
                   Guest User{" "}
                 </Text>
               </TouchableOpacity>

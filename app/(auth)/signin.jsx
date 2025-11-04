@@ -1,6 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { Formik } from "formik";
 import {
+  Alert,
   Image,
   ScrollView,
   Text,
@@ -15,7 +19,46 @@ import logo from "../../assets/images/dinetimelogo.png";
 import { validationSchema } from "../../utils/authSchema";
 const SignIn = () => {
   const router = useRouter();
-  const handleSignIn = () => {};
+  const auth = getAuth();
+  const db = getFirestore();
+  const handleGuest = async () => {
+    await AsyncStorage.setItem("isGuest", "true");
+    router.push("/home");
+  };
+  const handleSignIn = async (values) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredential.user;
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        console.log("useData", userDoc.data());
+        // console.log("values?.email", values?.email);
+        await AsyncStorage.setItem("userEmail", values?.email);
+        router.push("/home");
+      } else {
+        console.log("No such documents");
+      }
+    } catch (error) {
+      // console.log("Error white signUp", e);
+      if (error.code === "auth/invalid-credential") {
+        Alert.alert(
+          "Sign In Failed",
+          "Password should be correct.Please try again",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert(
+          "Sign in Error",
+          "This email address is already exists.Please use different email.",
+          [{ text: "OK" }]
+        );
+      }
+    }
+  };
   return (
     <SafeAreaView className={`bg-[#2b2b2b]`}>
       <ScrollView contentContainerStyle={{ height: "100%" }}>
@@ -45,7 +88,7 @@ const SignIn = () => {
                       Email
                     </Text>
                     <TextInput
-                      className="h-10 border border-white text-white rounded px-2 w-full"
+                      className="h-12 border border-white text-white rounded px-2 w-full"
                       keyboardType="email-address"
                       onChangeText={handleChange("email")}
                       value={values.email}
@@ -62,7 +105,7 @@ const SignIn = () => {
                       Password
                     </Text>
                     <TextInput
-                      className="h-10 border border-white text-white rounded px-2 w-full"
+                      className="h-12 border border-white text-white rounded px-2 w-full"
                       secureTextEntry
                       onChangeText={handleChange("password")}
                       value={values.password}
@@ -104,7 +147,7 @@ const SignIn = () => {
               </Text>
               <TouchableOpacity
                 className="flex flex-row items-center gap-1 justify-center"
-                onPress={() => router.push("/home")}
+                onPress={handleGuest}
               >
                 <Text className="text-white font-bold">Be a </Text>
                 <Text className="text-base font-bold text-[#f49b33] underline">
