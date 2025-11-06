@@ -23,8 +23,9 @@ const Home = () => {
   const [restaurants, setRestaurants] = useState([]);
   const router = useRouter();
   const temp = async () => {
-    const value = await AsyncStorage.getItem("userEmail");
-    console.log(value, "value");
+    const value = await AsyncStorage.getItem("isGuest");
+    const email = await AsyncStorage.getItem("userEmail");
+    console.log(value, "value",email,"email");
   };
   // console.log(restaurants);
   // for uploading data in the firebase
