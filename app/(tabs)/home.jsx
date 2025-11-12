@@ -25,7 +25,7 @@ const Home = () => {
   const temp = async () => {
     const value = await AsyncStorage.getItem("isGuest");
     const email = await AsyncStorage.getItem("userEmail");
-    console.log(value, "value",email,"email");
+    console.log(value, "value", email, "email");
   };
   // console.log(restaurants);
   // for uploading data in the firebase

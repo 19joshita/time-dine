@@ -1,8 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addDoc, collection } from "firebase/firestore";
+import { Formik } from "formik";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
 import { db } from "../../config/firebaseConfig";
+import { validationSchema } from "../../utils/guestFormSchema";
 
 const FindSlots = ({
   slots,
@@ -13,6 +15,8 @@ const FindSlots = ({
   restaurant,
 }) => {
   const [slotsVisible, setSlotVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [formVisible, setFormVisible] = useState(false);
   const handlePress = () => {
     setSlotVisible(!slotsVisible);
   };
@@ -26,6 +30,8 @@ const FindSlots = ({
   };
   const handleBooking = async () => {
     const userEmail = await AsyncStorage.getItem("userEmail");
+    const guestStatus = await AsyncStorage.getItem("isGuest");
+
     // console.log(userEmail, "userEmail");
     if (userEmail) {
       try {
@@ -40,6 +46,9 @@ const FindSlots = ({
       } catch (e) {
         console.log("error", e);
       }
+    } else if (guestStatus === true) {
+      setFormVisible(true);
+      setModalVisible(true);
     }
   };
   return (
@@ -82,6 +91,87 @@ const FindSlots = ({
           })}
         </View>
       )}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+          margin: 0,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }}
+      >
+        <View className="flex-1 bg-[#00000080]">
+          <View>
+            {formVisible ? (
+              <Formik
+                initialValues={{ fullName: "", phoneNumber: "" }}
+                validationSchema={validationSchema}
+                onSubmit={handleFormSubmit}
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View className="w-full flex gap-4">
+                    <View>
+                      <Text className="font-bold text-lg text-[#f49b33]">
+                        Full Name
+                      </Text>
+                      <TextInput
+                        className="h-12 border border-white text-white rounded px-2 w-full"
+                        onChangeText={handleChange("fullName")}
+                        value={values.fullName}
+                        onBlur={handleBlur("fullName")}
+                      />
+                      {touched.fullName && errors.fullName && (
+                        <Text className="text-red-500 text-sm my-2">
+                          {errors?.fullName}
+                        </Text>
+                      )}
+                    </View>
+                    <View>
+                      <Text className="font-bold text-lg text-[#f49b33]">
+                        Phone Number
+                      </Text>
+                      <TextInput
+                        className="h-12 border border-white text-white rounded px-2 w-full"
+                        secureTextEntry
+                        onChangeText={handleChange("phoneNumber")}
+                        value={values.phoneNumber}
+                        onBlur={handleBlur("phoneNumber")}
+                      />
+                      {touched.phoneNumber && errors.phoneNumber && (
+                        <Text className="text-red-500 text-sm my-2">
+                          {errors?.phoneNumber}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      className="bg-[#f49b33] p-2 rounded-lg mt-5"
+                      onPress={handleSubmit}
+                    >
+                      <Text className="text-black font-bold text-center text-lg">
+                        Submit
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
+            ) : (
+              <View>
+                <Text>Table Booked</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
