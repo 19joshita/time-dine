@@ -23,6 +23,9 @@ const SignUp = () => {
   const auth = getAuth();
   const db = getFirestore();
   const handleGuest = async () => {
+    // if( AsyncStorage.exists() = userEmail){
+    //   Alert.alert("You can't go inside")
+    // }
     await AsyncStorage.setItem("isGuest", "true");
     router.push("/home");
   };
@@ -40,6 +43,7 @@ const SignUp = () => {
       });
 
       await AsyncStorage.setItem("userEmail", values?.email);
+      await AsyncStorage.setItem("isGuest", "false");
       router.push("/home");
     } catch (error) {
       // console.log("Error white signUp", e);
@@ -149,7 +153,7 @@ const SignUp = () => {
                 onPress={handleGuest}
               >
                 <Text className="text-white font-bold">Be a </Text>
-                <Text className="text-base font-bold text-[#f49b33] underline" >
+                <Text className="text-base font-bold text-[#f49b33] underline">
                   Guest User{" "}
                 </Text>
               </TouchableOpacity>

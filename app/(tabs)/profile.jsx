@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { getAuth, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { getAuth, signOut } from "firebase/auth";
 const profile = () => {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState(null);
@@ -17,14 +17,16 @@ const profile = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      await AsyncStorage.removeItem("useEmail");
+      await AsyncStorage.removeItem("userEmail"); // fixed key
+      await AsyncStorage.removeItem("isGuest"); // optional, clear guest flag too
       setUserEmail(null);
-      Alert.alert("Logged Out","You have been logout successfully");
+      Alert.alert("Logged Out", "You have been logged out successfully");
       router.push("/signin");
     } catch (error) {
-      console.log(error, "error");
+      console.log("Logout error:", error);
     }
   };
+
   const handleSubmit = () => {
     router.push("/signup");
   };

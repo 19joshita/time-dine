@@ -43,7 +43,7 @@ const TabLayout = () => {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <AntDesign name="profile" size={24} color={color} />
+            <AntDesign name="profilero" size={24} color={color} />
           ),
         }}
       />

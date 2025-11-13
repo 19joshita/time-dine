@@ -38,6 +38,7 @@ const SignIn = () => {
         console.log("useData", userDoc.data());
         // console.log("values?.email", values?.email);
         await AsyncStorage.setItem("userEmail", values?.email);
+        await AsyncStorage.setItem("isGuest", "false");
         router.push("/home");
       } else {
         console.log("No such documents");
